@@ -1,0 +1,12 @@
+{
+    "name": "farmigo-backend",
+    "version": "1.0.0",
+    "description": "Backend server for Farmigo push notifications",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "firebase-admin": "^11.11.0"
+    }
+}

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "717144436962",
+    "project_id": "farmer-mall-d6af6",
+    "storage_bucket": "farmer-mall-d6af6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:717144436962:android:fd0093c675af9f36026ebb",
+        "android_client_info": {
+          "package_name": "com.example.farmigo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "717144436962-4cbet1r6ks3rc0jun1mhftg4k97o8kjk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnZ1TEstYskr6p-Tk4ZS-5LCfAuW5r-5o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "717144436962-4cbet1r6ks3rc0jun1mhftg4k97o8kjk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
