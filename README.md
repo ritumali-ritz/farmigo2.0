@@ -1,6 +1,6 @@
 # 🚜 Farmigo 2.0
 
-Farmigo 2.0 is a premium Flutter application designed to bridge the gap between farmers and buyers. It provides a seamless marketplace experience with real-time data integration using Supabase.
+Farmigo 2.0 is a premium Flutter application and the next-generation evolution of **Farmer Mall**. While the original version focused on local hosting, Farmigo 2.0 leverages **Supabase Cloud Storage and Database** to provide a global, real-time marketplace experience, bridging the gap between farmers and buyers with enhanced scalability and reliability.
 
 ![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)
