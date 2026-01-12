@@ -5,6 +5,7 @@ import '../../services/database_service.dart';
 import '../../models/order_model.dart';
 import '../../utils/constants.dart';
 import 'add_product_screen.dart';
+import '../common/chat_rooms_screen.dart';
 
 class FarmerHomeTab extends StatelessWidget {
   const FarmerHomeTab({super.key});
@@ -57,17 +58,34 @@ class FarmerHomeTab extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.add_business_outlined, color: Colors.white),
-                                  onPressed: () {
-                                     Navigator.push(context, MaterialPageRoute(builder: (_) => const AddProductScreen()));
-                                  },
-                                ),
+                              Row(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: IconButton(
+                                      icon: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white),
+                                      onPressed: () {
+                                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatRoomsScreen()));
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: IconButton(
+                                      icon: const Icon(Icons.add_business_outlined, color: Colors.white),
+                                      onPressed: () {
+                                        Navigator.push(context, MaterialPageRoute(builder: (_) => const AddProductScreen()));
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

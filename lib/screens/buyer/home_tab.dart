@@ -10,6 +10,14 @@ import '../../services/database_service.dart';
 import '../../models/banner_model.dart';
 import 'cart_screen.dart';
 import 'product_search_delegate.dart';
+import '../common/chat_rooms_screen.dart';
+import 'farms_map_screen.dart';
+import 'package:shimmer/shimmer.dart';
+import '../../providers/language_provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../providers/auction_provider.dart';
+import '../../models/product_model.dart';
+import 'bidding_arena_screen.dart';
 
 class BuyerHomeTab extends StatefulWidget {
   const BuyerHomeTab({super.key});
@@ -25,17 +33,20 @@ class _BuyerHomeTabState extends State<BuyerHomeTab> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() =>
-        Provider.of<ProductProvider>(context, listen: false).fetchProducts());
+    Future.microtask(() {
+        Provider.of<ProductProvider>(context, listen: false).fetchProducts();
+        Provider.of<AuctionProvider>(context, listen: false).fetchActiveAuctions();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final productProvider = Provider.of<ProductProvider>(context);
     final userProvider = Provider.of<UserProvider>(context);
+    final langProvider = Provider.of<LanguageProvider>(context);
     final user = userProvider.user;
     final hour = DateTime.now().hour;
-    final greeting = hour < 12 ? 'Good Morning' : (hour < 17 ? 'Good Afternoon' : 'Good Evening');
+    final greeting = hour < 12 ? langProvider.translate('good_morning') : (hour < 17 ? langProvider.translate('good_afternoon') : langProvider.translate('good_evening'));
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
@@ -71,16 +82,16 @@ class _BuyerHomeTabState extends State<BuyerHomeTab> {
                           children: [
                             Text(
                               greeting,
-                              style: TextStyle(
-                                color: Colors.grey[500],
+                              style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              user?.name.split(' ')[0] ?? 'Friend',
+                              user?.name.split(' ')[0] ?? langProvider.translate('friend'),
                               style: const TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
@@ -90,31 +101,73 @@ class _BuyerHomeTabState extends State<BuyerHomeTab> {
                             ),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.06),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: CircleAvatar(
-                            radius: 24,
-                            backgroundColor: AppConstants.primaryColor.withOpacity(0.1),
-                            child: Text(
-                              user?.name != null && user!.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                              style: const TextStyle(
-                                color: AppConstants.primaryColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FarmsMapScreen())),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.04),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(Icons.map_outlined, color: AppConstants.primaryColor, size: 22),
                               ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            GestureDetector(
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatRoomsScreen())),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.04),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(Icons.chat_bubble_outline_rounded, color: AppConstants.primaryColor, size: 22),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.06),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                radius: 24,
+                                backgroundColor: AppConstants.primaryColor.withOpacity(0.1),
+                                child: Text(
+                                  user?.name != null && user!.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                                  style: const TextStyle(
+                                    color: AppConstants.primaryColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -146,7 +199,7 @@ class _BuyerHomeTabState extends State<BuyerHomeTab> {
                             Icon(Icons.search_rounded, color: Colors.grey[400], size: 24),
                             const SizedBox(width: 12),
                             Text(
-                              "Search fresh harvest...",
+                              langProvider.translate('search_fresh_harvest'),
                               style: TextStyle(color: Colors.grey[400], fontSize: 15, fontWeight: FontWeight.w500),
                             ),
                             const Spacer(),
@@ -182,9 +235,9 @@ class _BuyerHomeTabState extends State<BuyerHomeTab> {
                             },
                           ),
                           items: [
-                            {'image': 'assets/banners/image.png', 'title': 'Fresh from\nOrganic Farms'},
-                            {'image': 'assets/banners/image copy.png', 'title': 'Direct Harvest\nto Your Door'},
-                            {'image': 'assets/banners/Untitled design.png', 'title': 'Support Local\nFarmers Today'},
+                            {'image': 'assets/banners/image.png', 'title': langProvider.translate('fresh_from_organic_farms')},
+                            {'image': 'assets/banners/image copy.png', 'title': langProvider.translate('direct_harvest_to_your_door')},
+                            {'image': 'assets/banners/Untitled design.png', 'title': langProvider.translate('support_local_farmers_today')},
                           ].map((item) {
                             return Container(
                               width: MediaQuery.of(context).size.width,
@@ -218,9 +271,9 @@ class _BuyerHomeTabState extends State<BuyerHomeTab> {
                                         color: AppConstants.primaryColor,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: const Text(
-                                        'FEATURED',
-                                        style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1),
+                                      child: Text(
+                                        langProvider.translate('featured').toUpperCase(),
+                                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1),
                                       ),
                                     ),
                                     const SizedBox(height: 10),
@@ -269,12 +322,150 @@ class _BuyerHomeTabState extends State<BuyerHomeTab> {
                   ),
                 ),
 
+                // Live Bidding Section
+                SliverToBoxAdapter(
+                  child: Consumer<AuctionProvider>(
+                    builder: (context, provider, child) {
+                      if (provider.activeAuctions.isEmpty) return const SizedBox();
+                      
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                            child: Row(
+                              children: [
+                                const Text(
+                                  'Live Bidding',
+                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                ).animate(onPlay: (c) => c.repeat()).fadeIn(duration: 500.ms).fadeOut(delay: 500.ms),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: 180,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              scrollDirection: Axis.horizontal,
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: provider.activeAuctions.length,
+                              itemBuilder: (context, index) {
+                                final auction = provider.activeAuctions[index];
+                                return GestureDetector(
+                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BiddingArenaScreen(auctionId: auction.id))),
+                                  child: Container(
+                                    width: 280,
+                                    margin: const EdgeInsets.only(right: 16),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0F172A),
+                                      borderRadius: BorderRadius.circular(24),
+                                      boxShadow: [
+                                        BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                                      ],
+                                    ),
+                                    child: FutureBuilder<ProductModel?>(
+                                      future: DatabaseService().getProductById(auction.productId),
+                                      builder: (context, prodSnap) {
+                                        final product = prodSnap.data;
+                                        return Stack(
+                                          children: [
+                                            if (product != null && product.images.isNotEmpty)
+                                              Positioned.fill(
+                                                child: ClipRRect(
+                                                  borderRadius: BorderRadius.circular(24),
+                                                  child: Image.network(product.images[0], fit: BoxFit.cover, opacity: const AlwaysStoppedAnimation(0.3)),
+                                                ),
+                                              ),
+                                            Positioned(
+                                              right: -20,
+                                              bottom: -20,
+                                              child: Icon(Icons.gavel_rounded, size: 100, color: Colors.white.withOpacity(0.05)),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.all(20),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    children: [
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                        decoration: BoxDecoration(color: Colors.red.withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
+                                                        child: Text(auction.timeLeft, style: const TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                                                      ),
+                                                      const Icon(Icons.trending_up, color: AppConstants.primaryColor, size: 20),
+                                                    ],
+                                                  ),
+                                                  const Spacer(),
+                                                  Text(
+                                                    product?.name ?? 'Auction ID: ...${auction.id.substring(auction.id.length - 6)}',
+                                                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    auction.purpose,
+                                                    style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                                    children: [
+                                                      Text(
+                                                        '\u{20B9}${auction.currentHighestBid.toStringAsFixed(0)}',
+                                                        style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(bottom: 4),
+                                                        child: Text('Current Bid', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10)),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      }
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+
                 // 4. Circular Category Menu
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                    child: Text(
+                      langProvider.translate('categories'),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
                 SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sectionHeader('Marketplace'),
+                      // _sectionHeader('Marketplace'), // Replaced by the above Text widget
                       const SizedBox(height: 20),
                       SizedBox(
                         height: 115,
@@ -297,18 +488,32 @@ class _BuyerHomeTabState extends State<BuyerHomeTab> {
 
                 // 5. Products Grid
                 SliverToBoxAdapter(
-                  child: _sectionHeader('Trending Harvest'),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 4),
+                    child: Text(
+                      langProvider.translate('fresh_picks'),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
 
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(24, 20, 24, 100),
                   sliver: productProvider.isLoading
-                    ? const SliverToBoxAdapter(child: Center(child: Padding(
-                        padding: EdgeInsets.only(top: 40),
-                        child: CircularProgressIndicator(),
-                      )))
+                    ? SliverGrid(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.68,
+                          mainAxisSpacing: 24,
+                          crossAxisSpacing: 20,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => _buildShimmerCard(),
+                          childCount: 4,
+                        ),
+                      )
                     : productProvider.products.isEmpty
-                      ? const SliverToBoxAdapter(child: Center(child: Text("No products found in this category")))
+                      ? SliverToBoxAdapter(child: Center(child: Text(langProvider.translate('no_products_found_in_category'))))
                       : SliverGrid(
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
@@ -318,7 +523,10 @@ class _BuyerHomeTabState extends State<BuyerHomeTab> {
                           ),
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
-                              return ProductCard(product: productProvider.products[index]);
+                              return ProductCard(product: productProvider.products[index])
+                                  .animate(delay: (index * 100).ms)
+                                  .fadeIn()
+                                  .slideY(begin: 0.1);
                             },
                             childCount: productProvider.products.length,
                           ),
@@ -453,5 +661,18 @@ class _BuyerHomeTabState extends State<BuyerHomeTab> {
       case 'grains': return Icons.grass_rounded;
       default: return Icons.grid_view_rounded;
     }
+  }
+
+  Widget _buildShimmerCard() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[200]!,
+      highlightColor: Colors.grey[50]!,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+        ),
+      ),
+    );
   }
 }

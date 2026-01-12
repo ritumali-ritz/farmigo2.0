@@ -9,6 +9,9 @@ class OrderModel {
   final DateTime createdAt;
   final String buyerName;
   final String buyerPhone;
+  final double? deliveryLatitude;
+  final double? deliveryLongitude;
+  final String deliveryStatus; // pending, picking_up, on_the_way, delivered
 
   OrderModel({
     required this.id,
@@ -21,6 +24,9 @@ class OrderModel {
     required this.createdAt,
     required this.buyerName,
     required this.buyerPhone,
+    this.deliveryLatitude,
+    this.deliveryLongitude,
+    this.deliveryStatus = 'pending',
   });
 
   Map<String, dynamic> toMap() {
@@ -34,6 +40,9 @@ class OrderModel {
       'created_at': createdAt.toIso8601String(),
       'buyer_name': buyerName,
       'buyer_phone': buyerPhone,
+      'delivery_latitude': deliveryLatitude,
+      'delivery_longitude': deliveryLongitude,
+      'delivery_status': deliveryStatus,
     };
   }
 
@@ -49,6 +58,9 @@ class OrderModel {
       createdAt: DateTime.parse(map['created_at'] ?? DateTime.now().toIso8601String()),
       buyerName: map['buyer_name'] ?? '',
       buyerPhone: map['buyer_phone'] ?? '',
+      deliveryLatitude: (map['delivery_latitude'] as num?)?.toDouble(),
+      deliveryLongitude: (map['delivery_longitude'] as num?)?.toDouble(),
+      deliveryStatus: map['delivery_status'] ?? 'pending',
     );
   }
 }

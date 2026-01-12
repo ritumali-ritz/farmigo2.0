@@ -1,0 +1,216 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class LanguageProvider with ChangeNotifier {
+  static const String _langKey = 'selected_language';
+  String _currentLocale = 'en';
+
+  LanguageProvider() {
+    _loadFromPrefs();
+  }
+
+  String get currentLocale => _currentLocale;
+
+  final Map<String, Map<String, String>> _translations = {
+    'en': {
+      'welcome': 'Welcome',
+      'good_morning': 'Good Morning',
+      'good_afternoon': 'Good Afternoon',
+      'good_evening': 'Good Evening',
+      'friend': 'Friend',
+      'explore': 'Explore fresh crops',
+      'search_hint': 'Search for products...',
+      'search_fresh_harvest': 'Search fresh harvest...',
+      'categories': 'Categories',
+      'fresh_picks': 'Fresh Picks for You',
+      'add_to_cart': 'Add to Cart',
+      'cart': 'My Cart',
+      'orders': 'My Orders',
+      'profile': 'Profile',
+      'dark_mode': 'Midnight Mode',
+      'language': 'Language',
+      'logout': 'Log Out',
+      'manage_orders': 'Manage Orders',
+      'start_delivery': 'Start Delivery',
+      'complete_delivery': 'Complete Delivery',
+      'chat': 'Chat',
+      'track_order': 'Track Order Live',
+      'featured': 'Featured',
+      'fresh_from_organic_farms': 'Fresh from\nOrganic Farms',
+      'direct_harvest_to_your_door': 'Direct Harvest\nto Your Door',
+      'support_local_farmers_today': 'Support Local\nFarmers Today',
+      'no_products_found_in_category': 'No products found in this category',
+      'description': 'Description',
+      'sold_out': 'Sold Out',
+      'product_added_to_cart': '{product_name} added to cart',
+      'order_placed': 'Order Placed!',
+      'order_success_msg': 'Your fresh products are being prepared by the farmer.',
+      'awesome': 'Awesome!',
+      'delivery_address': 'Delivery Address',
+      'enter_address_hint': 'Enter address or fetch live',
+      'total': 'Total',
+      'place_order_cod': 'Place Order (COD)',
+      'cart_empty': 'Your cart is empty!',
+      'active': 'Active',
+      'past': 'Past',
+      'order_id': 'Order #{id}',
+      'order_address': 'Address: {address}',
+      'total_amount': 'Total Amount',
+      'no_orders_found': 'No {type} orders found',
+      'track_order_live': 'Track Order Live',
+      'daily_subscription': 'Daily Subscription',
+      'how_many_per_day': 'How many {unit} per day?',
+      'cancel': 'Cancel',
+      'confirm': 'Confirm',
+      'subscription_active': 'Subscription active! 🌿',
+      'join_farmigo': 'Join Farmigo',
+      'login_prompt': 'Please login to place orders and subscribe to fresh products.',
+      'maybe_later': 'Maybe later',
+      'login': 'Login',
+      'farmer_info_not_available': 'Farmer info not available',
+      'please_login_to_chat': 'Please login to chat',
+      'subscribe_now': 'Subscribe Now',
+    },
+    'hi': {
+      'welcome': 'नमस्ते',
+      'good_morning': 'शुभ प्रभात',
+      'good_afternoon': 'शुभ दोपहर',
+      'good_evening': 'शुभ संध्या',
+      'friend': 'दोस्त',
+      'explore': 'ताजा फसलें देखें',
+      'search_hint': 'उत्पादों की खोज करें...',
+      'search_fresh_harvest': 'ताजी फसलें खोजें...',
+      'categories': 'श्रेणियाँ',
+      'fresh_picks': 'आपके लिए ताज़ा विकल्प',
+      'add_to_cart': 'कार्ट में जोड़ें',
+      'cart': 'मेरी कार्ट',
+      'orders': 'मेरे ऑर्डर',
+      'profile': 'प्रोफ़ाइल',
+      'dark_mode': 'मिडनाइट मोड',
+      'language': 'भाषा',
+      'logout': 'लॉग आउट',
+      'manage_orders': 'ऑर्डर प्रबंधित करें',
+      'start_delivery': 'डिलीवरी शुरू करें',
+      'complete_delivery': 'डिलीवरी पूरी करें',
+      'chat': 'चैट',
+      'track_order': 'लाइव ट्रैक करें',
+      'featured': 'ख़ास',
+      'fresh_from_organic_farms': 'जैविक खेतों से\nताजा',
+      'direct_harvest_to_your_door': 'सीधे आपके\nदरवाजे तक',
+      'support_local_farmers_today': 'स्थानीय किसानों का\nसमर्थन करें',
+      'no_products_found_in_category': 'इस श्रेणी में कोई उत्पाद नहीं मिला',
+      'description': 'विवरण',
+      'sold_out': 'बिक चुका है',
+      'product_added_to_cart': '{product_name} कार्ट में जोड़ा गया',
+      'order_placed': 'ऑर्डर दे दिया गया है!',
+      'order_success_msg': 'किसान आपकी ताज़ा उपज तैयार कर रहा है।',
+      'awesome': 'बहुत बढ़िया!',
+      'delivery_address': 'डिलिवरी पता',
+      'enter_address_hint': 'पता दर्ज करें या लाइव प्राप्त करें',
+      'total': 'कुल',
+      'place_order_cod': 'ऑर्डर दें (COD)',
+      'cart_empty': 'आपकी कार्ट खाली है!',
+      'active': 'सक्रिय',
+      'past': 'पुराने',
+      'order_id': 'ऑर्डर #{id}',
+      'order_address': 'पता: {address}',
+      'total_amount': 'कुल राशि',
+      'no_orders_found': 'कोई {type} ऑर्डर नहीं मिला',
+      'track_order_live': 'लाइव ट्रैक करें',
+      'daily_subscription': 'दैनिक सदस्यता',
+      'how_many_per_day': 'प्रतिदिन कितने {unit}?',
+      'cancel': 'रद्द करें',
+      'confirm': 'पुष्टि करें',
+      'subscription_active': 'सदस्यता सक्रिय है! 🌿',
+      'join_farmigo': 'फार्मइगो से जुड़ें',
+      'login_prompt': 'ऑर्डर देने और उत्पादों की सदस्यता लेने के लिए कृपया लॉगिन करें।',
+      'maybe_later': 'बाद में',
+      'login': 'लॉगिन',
+      'farmer_info_not_available': 'किसान की जानकारी उपलब्ध नहीं है',
+      'please_login_to_chat': 'चैट करने के लिए कृपया लॉगिन करें',
+      'subscribe_now': 'अभी सब्सक्राइब करें',
+    },
+    'mr': {
+      'welcome': 'स्वागत आहे',
+      'good_morning': 'शुभ प्रभात',
+      'good_afternoon': 'शुभ दुपार',
+      'good_evening': 'शुभ संध्याकाळ',
+      'friend': 'मित्र',
+      'explore': 'ताजा कापणी एक्सप्लोर करा',
+      'search_hint': 'उत्पादने शोधा...',
+      'search_fresh_harvest': 'ताजी कापणी शोधा...',
+      'categories': 'श्रेणी',
+      'fresh_picks': 'तुमच्यासाठी ताजी निवड',
+      'add_to_cart': 'कार्टमध्ये जोडा',
+      'cart': 'माझी कार्ट',
+      'orders': 'माझे आदेश',
+      'profile': 'प्रोफाइल',
+      'dark_mode': 'मिडनाइट मोड',
+      'language': 'भाषा',
+      'logout': 'लॉग आउट',
+      'manage_orders': 'ऑर्डर व्यवस्थापित करा',
+      'start_delivery': 'डिलिव्हरी सुरू करा',
+      'complete_delivery': 'डिलिव्हरी पूर्ण करा',
+      'chat': 'चॅट',
+      'track_order': 'लाइव ट्रॅक करा',
+      'featured': 'वैशिष्ट्यीकृत',
+      'fresh_from_organic_farms': 'सेंद्रिय शेतातून\nताजे',
+      'direct_harvest_to_your_door': 'थेट तुमच्या\nदारापर्यंत',
+      'support_local_farmers_today': 'स्थानिक शेतकऱ्यांना\nपाठिंबा द्या',
+      'no_products_found_in_category': 'या श्रेणीमध्ये कोणतीही उत्पादने आढळली नाहीत',
+      'description': 'वर्णन',
+      'sold_out': 'संपले',
+      'product_added_to_cart': '{product_name} कार्टमध्ये जोडले',
+      'order_placed': 'ऑर्डर दिली गेली आहे!',
+      'order_success_msg': 'शेतकरी तुमची ताजी उत्पादने तयार करत आहे.',
+      'awesome': 'उत्कृष्ट!',
+      'delivery_address': 'डिलिव्हरी पत्ता',
+      'enter_address_hint': 'पत्ता प्रविष्ट करा किंवा लाईव्ह मिळवा',
+      'total': 'एकूण',
+      'place_order_cod': 'ऑर्डर द्या (COD)',
+      'cart_empty': 'तुमची कार्ट रिकामी आहे!',
+      'active': 'सक्रिय',
+      'past': 'जुने',
+      'order_id': 'ऑर्डर #{id}',
+      'order_address': 'पत्ता: {address}',
+      'total_amount': 'एकूण रक्कम',
+      'no_orders_found': 'कोणतेही {type} आदेश आढळले नाहीत',
+      'track_order_live': 'लाईव्ह ट्रॅक करा',
+      'daily_subscription': 'दैनिक सदस्यता',
+      'how_many_per_day': 'दररोज किती {unit}?',
+      'cancel': 'रद्द करा',
+      'confirm': 'निश्चित करा',
+      'subscription_active': 'सदस्यता सक्रिय आहे! 🌿',
+      'join_farmigo': 'Farmigo मध्ये सामील व्हा',
+      'login_prompt': 'ऑर्डर देण्यासाठी आणि उत्पादनांची सदस्यता घेण्यासाठी कृपया लॉगिन करा.',
+      'maybe_later': 'नंतर',
+      'login': 'लॉगिन',
+      'farmer_info_not_available': 'शेतकऱ्याची माहिती उपलब्ध नाही',
+      'please_login_to_chat': 'चॅट करण्यासाठी कृपया लॉगिन करा',
+      'subscribe_now': 'आता सदस्यता घ्या',
+    },
+  };
+
+  String translate(String key, [Map<String, String>? placeholders]) {
+    String text = _translations[_currentLocale]?[key] ?? key;
+    if (placeholders != null) {
+      placeholders.forEach((k, v) {
+        text = text.replaceAll('{$k}', v);
+      });
+    }
+    return text;
+  }
+
+  void setLanguage(String langCode) async {
+    _currentLocale = langCode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString(_langKey, langCode);
+  }
+
+  void _loadFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    _currentLocale = prefs.getString(_langKey) ?? 'en';
+    notifyListeners();
+  }
+}

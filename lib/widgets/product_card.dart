@@ -3,11 +3,17 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/product_model.dart';
 import '../providers/cart_provider.dart';
+import '../providers/auth_provider.dart';
 import '../utils/constants.dart';
 import '../screens/buyer/product_detail_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/services.dart';
+import '../screens/common/chat_detail_screen.dart';
+import '../services/chat_service.dart';
+import '../../providers/language_provider.dart';
 
 class ProductCard extends StatelessWidget {
   final ProductModel product;
@@ -15,9 +21,11 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final cart = Provider.of<CartProvider>(context, listen: false);
+    final langProvider = Provider.of<LanguageProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return InkWell(
+    return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
@@ -26,7 +34,7 @@ class ProductCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
@@ -122,14 +130,13 @@ class ProductCard extends StatelessWidget {
                           color: Colors.black45,
                           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
-                            'SOLD OUT',
-                            style: TextStyle(
+                            langProvider.translate('sold_out').toUpperCase(),
+                            style: const TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 10,
-                              letterSpacing: 1.5,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -150,7 +157,6 @@ class ProductCard extends StatelessWidget {
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
-                      color: Color(0xFF1F2937),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -176,18 +182,17 @@ class ProductCard extends StatelessWidget {
                           Icons.chat_bubble_outline,
                           Colors.green,
                           () async {
+                            final userProvider = Provider.of<UserProvider>(context, listen: false);
+                            if (userProvider.user == null) {
+                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please login to chat')));
+                               return;
+                            }
                             final farmer = await AuthService().getUserData(product.farmerId);
-                            if (farmer != null && farmer.phone.isNotEmpty) {
-                              final message = "Hi! I'm interested in requesting *${product.name}* (${product.unit}). Can you please provide more details?";
-                              await AppConstants.launchWhatsApp(
-                                context: context,
-                                phone: farmer.phone,
-                                message: message,
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Farmer contact info not available')),
-                              );
+                            if (farmer != null) {
+                              final room = await ChatService().getOrCreateRoom(userProvider.user!.uid, product.farmerId);
+                              if (context.mounted) {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => ChatDetailScreen(roomId: room.id, otherUserName: farmer.name)));
+                              }
                             }
                           },
                         ),
@@ -198,13 +203,18 @@ class ProductCard extends StatelessWidget {
                           Icons.add_shopping_cart,
                           AppConstants.primaryColor,
                           () {
-                            cartProvider.addItem(product);
+                            HapticFeedback.lightImpact();
+                            cart.addItem(product);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('${product.name} added'),
+                                content: Text(
+                                  langProvider.translate('product_added_to_cart', {'product_name': product.name}),
+                                  style: const TextStyle(color: Colors.white),
+                                ),
                                 duration: const Duration(seconds: 1),
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                 behavior: SnackBarBehavior.floating,
+                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                 backgroundColor: AppConstants.primaryColor,
                               ),
                             );
                           },

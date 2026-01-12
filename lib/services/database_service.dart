@@ -4,6 +4,9 @@ import '../models/order_model.dart';
 import '../models/cart_model.dart';
 import '../models/subscription_model.dart';
 import '../models/banner_model.dart';
+import '../models/user_model.dart';
+import '../models/auction_model.dart';
+import '../models/bid_model.dart';
 
 class DatabaseService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -53,6 +56,14 @@ class DatabaseService {
           }
           return products;
         });
+  }
+
+  Future<ProductModel?> getProductById(String id) async {
+    final data = await _supabase.from('products').select().eq('id', id).maybeSingle();
+    if (data != null) {
+      return ProductModel.fromMap(data, data['id']);
+    }
+    return null;
   }
 
   // Orders
@@ -175,6 +186,70 @@ class DatabaseService {
     return _supabase.from('banners').stream(primaryKey: ['id']).map((data) => data
         .map((map) => BannerModel.fromMap(map, map['id']))
         .toList());
+  }
+
+  // Farmers
+  Stream<List<UserModel>> getFarmers() {
+    return _supabase
+        .from('farmers')
+        .stream(primaryKey: ['uid'])
+        .map((data) => data.map((map) => UserModel.fromMap(map)).toList());
+  }
+
+  // Auctions
+  Future<void> createAuction(AuctionModel auction) async {
+    final data = auction.toMap();
+    if (auction.id.isEmpty) {
+      data.remove('id');
+    }
+    await _supabase.from('auctions').insert(data);
+  }
+
+  Stream<List<AuctionModel>> getActiveAuctions() {
+    return _supabase
+        .from('auctions')
+        .stream(primaryKey: ['id'])
+        .eq('status', 'active')
+        .map((data) => data
+            .map((map) => AuctionModel.fromMap(map, map['id']))
+            .where((a) => a.endTime.isAfter(DateTime.now()))
+            .toList());
+  }
+
+  Stream<AuctionModel?> streamAuctionById(String auctionId) {
+    return _supabase
+        .from('auctions')
+        .stream(primaryKey: ['id'])
+        .eq('id', auctionId)
+        .map((data) => data.isNotEmpty 
+            ? AuctionModel.fromMap(data.first, data.first['id']) 
+            : null);
+  }
+
+  // Bids
+  Future<void> placeBid(String auctionId, String buyerId, double amount) async {
+    try {
+      await _supabase.rpc('place_bid', params: {
+        'auction_id_param': auctionId,
+        'buyer_id_param': buyerId,
+        'amount_param': amount,
+      });
+    } catch (e) {
+      print('DEBUG: Error placing bid: $e');
+      rethrow;
+    }
+  }
+
+  Stream<List<BidModel>> streamAuctionBids(String auctionId) {
+    return _supabase
+        .from('bids')
+        .stream(primaryKey: ['id'])
+        .eq('auction_id', auctionId)
+        .map((data) {
+          var bids = data.map((map) => BidModel.fromMap(map, map['id'])).toList();
+          bids.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return bids;
+        });
   }
 }
 

@@ -8,6 +8,9 @@ import '../../services/database_service.dart';
 import '../../services/location_service.dart';
 import '../../services/notification_service.dart';
 import '../../models/order_model.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../providers/language_provider.dart';
+import 'dart:ui';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -50,11 +53,13 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
     final userProvider = Provider.of<UserProvider>(context);
+    final langProvider = Provider.of<LanguageProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Cart')),
+      appBar: AppBar(title: Text(langProvider.translate('cart'))),
       body: cart.items.isEmpty
-          ? const Center(child: Text('Your cart is empty!'))
+          ? Center(child: Text(langProvider.translate('cart_empty')))
           : Column(
               children: [
                 Expanded(
@@ -86,21 +91,21 @@ class _CartScreenState extends State<CartScreen> {
                 ),
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-                    boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+                    boxShadow: [BoxShadow(color: isDark ? Colors.black26 : Colors.black12, blurRadius: 10)],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text('Delivery Address', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(langProvider.translate('delivery_address'), style: const TextStyle(fontWeight: FontWeight.bold)),
                       Row(
                         children: [
                           Expanded(
                             child: TextField(
                               controller: _addressController,
-                              decoration: const InputDecoration(hintText: 'Enter address or fetch live'),
+                              decoration: InputDecoration(hintText: langProvider.translate('enter_address_hint')),
                             ),
                           ),
                           IconButton(
@@ -115,14 +120,14 @@ class _CartScreenState extends State<CartScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Total:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text('${langProvider.translate('total')}:', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                           Text('₹${cart.totalAmount}', style: const TextStyle(fontSize: 20, color: AppConstants.primaryColor, fontWeight: FontWeight.bold)),
                         ],
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: () => _placeOrder(context, cart, userProvider),
-                        child: const Text('Place Order (COD)'),
+                        onPressed: () => _placeOrder(context, cart, userProvider, langProvider),
+                        child: Text(langProvider.translate('place_order_cod')),
                       ),
                     ],
                   ),
@@ -132,7 +137,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  void _placeOrder(BuildContext context, CartProvider cart, UserProvider userProvider) async {
+   void _placeOrder(BuildContext context, CartProvider cart, UserProvider userProvider, LanguageProvider langProvider) async {
     if (_addressController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please provide an address')));
       return;
@@ -189,7 +194,96 @@ class _CartScreenState extends State<CartScreen> {
     }
 
     cart.clear();
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order placed successfully!')));
+    if (context.mounted) {
+      _showSuccessDialog(context, langProvider);
+    }
+  }
+
+  void _showSuccessDialog(BuildContext context, LanguageProvider langProvider) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(36),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      color: AppConstants.primaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppConstants.primaryColor,
+                      size: 60,
+                    ),
+                  ).animate().scale(duration: 500.ms, curve: Curves.elasticOut).shimmer(delay: 500.ms),
+                  const SizedBox(height: 24),
+                  Text(
+                    langProvider.translate('order_placed'),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                    ),
+                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
+                  const SizedBox(height: 12),
+                  Text(
+                    langProvider.translate('order_success_msg'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600],
+                      fontSize: 16,
+                      height: 1.4,
+                    ),
+                  ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Close dialog
+                        Navigator.pop(context); // Go back home
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppConstants.primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        langProvider.translate('awesome'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ),
+                  ).animate().fadeIn(delay: 600.ms).scale(begin: const Offset(0.9, 0.9)),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

@@ -11,6 +11,11 @@ import '../../services/database_service.dart';
 import '../../services/auth_service.dart';
 import '../../models/subscription_model.dart';
 import '../auth/login_screen.dart';
+import '../../services/chat_service.dart';
+import '../common/chat_detail_screen.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/services.dart';
+import '../../providers/language_provider.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final ProductModel product;
@@ -27,9 +32,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final langProvider = Provider.of<LanguageProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           CustomScrollView(
@@ -37,23 +44,33 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             slivers: [
               // 1. Sleek SliverAppBar with Image
               SliverAppBar(
-                expandedHeight: 400,
+                expandedHeight: 450,
                 pinned: true,
                 stretch: true,
-                backgroundColor: Colors.white,
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                 elevation: 0,
+                leadingWidth: 70,
                 leading: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CircleAvatar(
-                    backgroundColor: Colors.white.withOpacity(0.9),
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Colors.black),
-                      onPressed: () => Navigator.pop(context),
+                  padding: const EdgeInsets.all(12.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.black38 : Colors.white.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.arrow_back_ios_new, size: 18, color: isDark ? Colors.white : Colors.black),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 flexibleSpace: FlexibleSpaceBar(
-                  stretchModes: const [StretchMode.zoomBackground],
+                  stretchModes: const [StretchMode.zoomBackground, StretchMode.blurBackground],
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -61,17 +78,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         tag: 'product-${widget.product.id}',
                         child: _buildProductImage(),
                       ),
-                      // Soft Gradient Overlay
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [
-                              Colors.black38,
-                              Colors.transparent,
-                            ],
-                            stops: [0.0, 0.4],
+                      // Premium Gradient Overlay
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                Theme.of(context).scaffoldBackgroundColor,
+                                Colors.transparent,
+                                isDark ? Colors.black.withOpacity(0.6) : Colors.black.withOpacity(0.3),
+                              ],
+                              stops: const [0.0, 0.4, 1.0],
+                            ),
                           ),
                         ),
                       ),
@@ -84,9 +104,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               SliverToBoxAdapter(
                 child: Container(
                   transform: Matrix4.translationValues(0, -20, 0),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF9FAFB),
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(24, 32, 24, 120),
@@ -107,19 +127,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       color: AppConstants.primaryColor,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w800,
-                                      letterSpacing: 1.5,
+                                      letterSpacing: 2.0,
                                     ),
-                                  ),
+                                  ).animate().fadeIn().slideX(begin: -0.2),
                                   const SizedBox(height: 8),
                                   Text(
                                     widget.product.name,
                                     style: const TextStyle(
-                                      fontSize: 32,
+                                      fontSize: 34,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF111827),
                                       letterSpacing: -1,
                                     ),
-                                  ),
+                                  ).animate().fadeIn(delay: 100.ms).slideX(begin: -0.1),
                                 ],
                               ),
                             ),
@@ -129,19 +148,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 Text(
                                   '₹${widget.product.price.toInt()}',
                                   style: const TextStyle(
-                                    fontSize: 28,
+                                    fontSize: 32,
                                     fontWeight: FontWeight.w900,
                                     color: AppConstants.primaryColor,
                                   ),
-                                ),
-                                Text(
-                                  'per ${widget.product.unit}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[500],
-                                    fontWeight: FontWeight.w500,
+                                ).animate().scale(begin: const Offset(0.8, 0.8), curve: Curves.elasticOut, duration: 800.ms),
+                                  Text(
+                                    'per ${widget.product.unit}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isDark ? Colors.grey[400] : Colors.grey[500],
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
                               ],
                             ),
                           ],
@@ -151,9 +170,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                         // Section Hooks
                         _buildInfoSection(
-                          title: 'Description',
+                          title: langProvider.translate('description'),
                           content: widget.product.description,
                           icon: Icons.notes_rounded,
+                          isDark: isDark,
                         ),
 
                         const SizedBox(height: 24),
@@ -182,7 +202,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Widget _buildProductImage() {
     if (widget.product.images.isEmpty) {
-      return Container(color: Colors.grey[100], child: const Icon(Icons.image, size: 80));
+      return Container(color: Colors.grey[200], child: const Icon(Icons.image, size: 80));
     }
     final img = widget.product.images[0];
     return img.startsWith('http')
@@ -190,36 +210,42 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         : Image.asset(img, fit: BoxFit.cover);
   }
 
-  Widget _buildInfoSection({required String title, required String content, required IconData icon}) {
+  Widget _buildInfoSection({required String title, required String content, required IconData icon, required bool isDark}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, size: 18, color: Colors.grey[700]),
+            Icon(icon, size: 18, color: isDark ? Colors.grey[400] : Colors.grey[700]),
             const SizedBox(width: 8),
             Text(
               title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF374151)),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         const SizedBox(height: 12),
         Text(
           content,
-          style: TextStyle(fontSize: 15, color: Colors.grey[600], height: 1.6, fontWeight: FontWeight.w400),
+          style: TextStyle(
+            fontSize: 15, 
+            color: isDark ? Colors.grey[400] : Colors.grey[600], 
+            height: 1.6, 
+            fontWeight: FontWeight.w400
+          ),
         ),
       ],
     );
   }
 
   Widget _buildFarmerCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey[100]!),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[100]!),
       ),
       child: Row(
         children: [
@@ -238,11 +264,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               children: [
                 const Text(
                   'Harvested by',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF6B7280), fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                 ),
-                Text(
+                const Text(
                   'Local Organic Farmer',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1F2937)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -254,16 +280,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildSubscriptionCard(BuildContext context, UserProvider userProvider) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langProvider = Provider.of<LanguageProvider>(context, listen: false);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue[50]!, Colors.white],
+          colors: isDark 
+            ? [Colors.blue[900]!.withOpacity(0.3), Theme.of(context).cardColor]
+            : [Colors.blue[50]!, Colors.white],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.blue[100]!),
+        border: Border.all(color: isDark ? Colors.blue[800]!.withOpacity(0.5) : Colors.blue[100]!),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,16 +302,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             children: [
               const Icon(Icons.auto_awesome, color: Colors.blue, size: 20),
               const SizedBox(width: 8),
-              const Text(
-                'Daily Subscription',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
+              Text(
+                langProvider.translate('daily_subscription'),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
               ),
             ],
           ),
           const SizedBox(height: 8),
           const Text(
             'Get fresh delivery every single morning at your doorstep.',
-            style: TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
+            style: TextStyle(fontSize: 13),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
@@ -292,7 +322,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               elevation: 0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Subscribe Now'),
+            child: Text(langProvider.translate('subscribe_now')),
           ),
         ],
       ),
@@ -300,6 +330,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildFloatingActionBar(BuildContext context, UserProvider userProvider, CartProvider cartProvider) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langProvider = Provider.of<LanguageProvider>(context);
     return Positioned(
       bottom: 24,
       left: 24,
@@ -311,12 +343,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.8),
+              color: isDark ? Colors.black.withOpacity(0.7) : Colors.white.withOpacity(0.8),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withOpacity(0.5)),
+              border: Border.all(color: isDark ? Colors.white12 : Colors.white.withOpacity(0.5)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -328,34 +360,50 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100]!.withOpacity(0.5),
+                    color: isDark ? Colors.white10 : Colors.grey[100]!.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     children: [
-                      _qtyBtn(Icons.remove, () => setState(() => _quantity > 1 ? _quantity-- : null)),
+                      _qtyBtn(Icons.remove, () => setState(() => _quantity > 1 ? _quantity-- : null), isDark),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Text('$_quantity', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       ),
-                      _qtyBtn(Icons.add, () => setState(() => _quantity++)),
+                      _qtyBtn(Icons.add, () => setState(() => _quantity++), isDark),
                     ],
                   ),
                 ),
                 const SizedBox(width: 12),
                 // Chat Button
                 _actionIcon(Icons.chat_bubble_outline_rounded, Colors.green, () async {
+                  if (userProvider.user == null) {
+                    _showLoginPrompt(context);
+                    return;
+                  }
+
                   final farmer = await AuthService().getUserData(widget.product.farmerId);
-                  if (farmer != null && farmer.phone.isNotEmpty) {
-                    final message = "Hi! I'm interested in requesting *${widget.product.name}* (${widget.product.unit}). Can you please provide more details?";
-                    await AppConstants.launchWhatsApp(
-                      context: context,
-                      phone: farmer.phone,
-                      message: message,
+                  if (farmer != null) {
+                    final chatService = ChatService();
+                    final room = await chatService.getOrCreateRoom(
+                      userProvider.user!.uid,
+                      widget.product.farmerId,
                     );
+                    
+                    if (mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatDetailScreen(
+                            roomId: room.id,
+                            otherUserName: farmer.name,
+                          ),
+                        ),
+                      );
+                    }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Farmer contact info not available')),
+                      SnackBar(content: Text(langProvider.translate('farmer_info_not_available'))),
                     );
                   }
                 }),
@@ -365,6 +413,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   child: ElevatedButton(
                     onPressed: widget.product.isAvailable && widget.product.stockQuantity > 0
                         ? () {
+                            HapticFeedback.lightImpact();
                             if (userProvider.user == null) {
                               _showLoginPrompt(context);
                             } else {
@@ -373,10 +422,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               }
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Added $_quantity to cart'),
+                                  content: Row(
+                                    children: [
+                                      const Icon(Icons.check_circle_rounded, color: Colors.white),
+                                      const SizedBox(width: 12),
+                                      Text('Added $_quantity ${widget.product.name} to cart'),
+                                    ],
+                                  ),
                                   behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                   backgroundColor: AppConstants.primaryColor,
+                                  duration: const Duration(seconds: 2),
                                 ),
                               );
                             }
@@ -385,12 +441,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppConstants.primaryColor,
                       foregroundColor: Colors.white,
-                      elevation: 0,
+                      elevation: 8,
+                      shadowColor: AppConstants.primaryColor.withOpacity(0.4),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     ),
-                    child: const Text('Add to Cart', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
+                    child: Text(
+                      Provider.of<LanguageProvider>(context, listen: false).translate('add_to_cart'),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+                   .shimmer(delay: 3.seconds, duration: 1500.ms, color: Colors.white30),
                 ),
               ],
             ),
@@ -400,9 +461,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _qtyBtn(IconData icon, VoidCallback onTap) {
+  Widget _qtyBtn(IconData icon, VoidCallback onTap, bool isDark) {
     return IconButton(
-      icon: Icon(icon, size: 16, color: Colors.black),
+      icon: Icon(icon, size: 16, color: isDark ? Colors.white : Colors.black),
       onPressed: onTap,
       splashRadius: 20,
     );
@@ -424,6 +485,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   void _subscribe(BuildContext context, UserProvider userProvider) async {
+    final langProvider = Provider.of<LanguageProvider>(context, listen: false);
     if (userProvider.user == null) {
       _showLoginPrompt(context);
       return;
@@ -434,11 +496,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: const Text('Daily Subscription'),
+          title: Text(langProvider.translate('daily_subscription')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('How many ${widget.product.unit} per day?'),
+              Text(langProvider.translate('how_many_per_day', {'unit': widget.product.unit})),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -451,7 +513,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: Colors.grey))),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(langProvider.translate('cancel'), style: const TextStyle(color: Colors.grey))),
             ElevatedButton(
               onPressed: () async {
                 SubscriptionModel sub = SubscriptionModel(
@@ -467,10 +529,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 );
                 await DatabaseService().addSubscription(sub);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Subscription active! 🌿')));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(langProvider.translate('subscription_active'))));
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: const Text('Confirm'),
+              child: Text(langProvider.translate('confirm')),
             ),
           ],
         ),
@@ -479,21 +541,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   void _showLoginPrompt(BuildContext context) {
+    final langProvider = Provider.of<LanguageProvider>(context, listen: false);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Join Farmigo'),
-        content: const Text('Please login to place orders and subscribe to fresh products.'),
+        title: Text(langProvider.translate('join_farmigo')),
+        content: Text(langProvider.translate('login_prompt')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Maybe later', style: TextStyle(color: Colors.grey))),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(langProvider.translate('maybe_later'), style: const TextStyle(color: Colors.grey))),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppConstants.primaryColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            child: const Text('Login'),
+            child: Text(langProvider.translate('login')),
           ),
         ],
       ),

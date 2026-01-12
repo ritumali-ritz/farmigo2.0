@@ -6,6 +6,7 @@ import '../../services/database_service.dart';
 import '../../models/product_model.dart';
 import '../../utils/constants.dart';
 import 'add_product_screen.dart';
+import '../../widgets/start_auction_dialog.dart';
 
 class FarmerProductsTab extends StatelessWidget {
   const FarmerProductsTab({super.key});
@@ -78,6 +79,15 @@ class FarmerProductsTab extends StatelessWidget {
                             isAvailable: val,
                             isDailySubscriptionAvailable: product.isDailySubscriptionAvailable,
                           ));
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.gavel_rounded, color: AppConstants.primaryColor),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => StartAuctionDialog(product: product),
+                          );
                         },
                       ),
                       IconButton(

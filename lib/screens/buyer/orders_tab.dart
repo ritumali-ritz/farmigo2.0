@@ -5,6 +5,9 @@ import '../../providers/auth_provider.dart';
 import '../../services/database_service.dart';
 import '../../models/order_model.dart';
 import '../../utils/constants.dart';
+import 'order_tracking_screen.dart';
+import '../../services/auth_service.dart';
+import '../../providers/language_provider.dart';
 
 class BuyerOrdersTab extends StatelessWidget {
   const BuyerOrdersTab({super.key});
@@ -12,6 +15,7 @@ class BuyerOrdersTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<UserProvider>(context).user;
+    final langProvider = Provider.of<LanguageProvider>(context);
 
     if (user == null) {
       return const Center(child: Text('Login to view orders'));
@@ -21,11 +25,11 @@ class BuyerOrdersTab extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('My Orders'),
-          bottom: const TabBar(
+          title: Text(langProvider.translate('orders')),
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Active'),
-              Tab(text: 'Past'),
+              Tab(text: langProvider.translate('active')),
+              Tab(text: langProvider.translate('past')),
             ],
             indicatorColor: AppConstants.primaryColor,
             labelColor: AppConstants.primaryColor,
@@ -51,6 +55,9 @@ class _OrderList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final langProvider = Provider.of<LanguageProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return StreamBuilder<List<OrderModel>>(
       stream: DatabaseService().getBuyerOrders(userId, type: type),
       builder: (context, snapshot) {
@@ -62,9 +69,12 @@ class _OrderList extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.shopping_bag_outlined, size: 64, color: Colors.grey.shade300),
+                Icon(Icons.shopping_bag_outlined, size: 64, color: isDark ? Colors.white24 : Colors.grey.shade300),
                 const SizedBox(height: 16),
-                Text('No $type orders found', style: const TextStyle(color: Colors.grey)),
+                Text(
+                  langProvider.translate('no_orders_found', {'type': langProvider.translate(type.toLowerCase())}), 
+                  style: const TextStyle(color: Colors.grey)
+                ),
               ],
             ),
           );
@@ -77,7 +87,13 @@ class _OrderList extends StatelessWidget {
           itemBuilder: (context, index) {
             final order = orders[index];
             return Card(
+              color: Theme.of(context).cardColor,
               margin: const EdgeInsets.only(bottom: 16),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(color: isDark ? Colors.white10 : Colors.grey[100]!),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -86,7 +102,10 @@ class _OrderList extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Order #${order.id.length > 5 ? order.id.substring(0, 5) : order.id}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(
+                          langProvider.translate('order_id', {'id': order.id.length > 5 ? order.id.substring(0, 5) : order.id}), 
+                          style: const TextStyle(fontWeight: FontWeight.bold)
+                        ),
                         _buildStatusChip(order.status),
                       ],
                     ),
@@ -107,12 +126,42 @@ class _OrderList extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Total Amount', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text(langProvider.translate('total_amount'), style: const TextStyle(fontWeight: FontWeight.bold)),
                         Text('₹${order.totalAmount}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppConstants.primaryColor)),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text('Address: ${order.deliveryAddress}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text(
+                      langProvider.translate('order_address', {'address': order.deliveryAddress}), 
+                      style: const TextStyle(fontSize: 12, color: Colors.grey)
+                    ),
+                    if (order.deliveryStatus == 'on_the_way') ...[
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => OrderTrackingScreen(
+                                  orderId: order.id,
+                                  farmerName: "Farmer", // We can fetch actual name if needed
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.map_rounded),
+                          label: Text(langProvider.translate('track_order_live')),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppConstants.primaryColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
